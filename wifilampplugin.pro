@@ -1,12 +1,14 @@
 QT += core network
 
-DBLIBS += webserverlib
+DBLIBS += dbnetwork webserverlib
 
 HEADERS += wifilampplugin.h \
-    wifilampapplication.h
+    wifilampapplication.h \
+    wifilampclient.h
 
 SOURCES += wifilampplugin.cpp \
-    wifilampapplication.cpp
+    wifilampapplication.cpp \
+    wifilampclient.cpp
 
 FORMS +=
 

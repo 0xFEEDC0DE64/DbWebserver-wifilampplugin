@@ -13,7 +13,7 @@ QString WifiLampPlugin::pluginName() const
     return QStringLiteral("wifilamp");
 }
 
-WebApplication *WifiLampPlugin::createApplication(const QJsonObject &config) const
+WebApplication *WifiLampPlugin::createApplication(const QJsonObject &config, WebServer &webServer) const
 {
-    return new WifiLampApplication(config);
+    return new WifiLampApplication(config, webServer);
 }

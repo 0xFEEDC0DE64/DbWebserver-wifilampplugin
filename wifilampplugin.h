@@ -12,5 +12,5 @@ public:
     WifiLampPlugin(QObject *parent = Q_NULLPTR);
 
     QString pluginName() const Q_DECL_OVERRIDE;
-    WebApplication *createApplication(const QJsonObject &config) const Q_DECL_OVERRIDE;
+    WebApplication *createApplication(const QJsonObject &config, WebServer &webServer) const Q_DECL_OVERRIDE;
 };
