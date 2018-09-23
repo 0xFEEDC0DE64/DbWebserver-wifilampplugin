@@ -11,27 +11,30 @@
 #include "httprequest.h"
 #include "httpresponse.h"
 #include "httpclientconnection.h"
+#include "httpnotfoundexception.h"
 
 #include "wifilampclient.h"
+
+const QString WifiLampApplication::SERVER_NAME(QStringLiteral("WifiLamp Server 1.0"));
 
 WifiLampApplication::WifiLampApplication(const QJsonObject &config, WebServer &webServer) :
     WebApplication(&webServer), m_webServer(webServer)
 {
     if(!config.contains(QStringLiteral("controlHostAddress")))
-        throw std::runtime_error("listener does not contain controlHostAddress");
+        throw std::runtime_error("WifiLamp application does not contain controlHostAddress");
 
     const auto hostAddressVal = config.value(QStringLiteral("controlHostAddress"));
     if(!hostAddressVal.isString())
-        throw std::runtime_error("listener hostAddress is not a string");
+        throw std::runtime_error("WifiLamp application controlHostAddress is not a string");
 
     m_hostAddress = parseHostAddress(hostAddressVal.toString());
 
     if(!config.contains(QStringLiteral("controlPort")))
-        throw std::runtime_error("listener does not contain controlPort");
+        throw std::runtime_error("WifiLamp application does not contain controlPort");
 
     const auto portVal = config.value(QStringLiteral("controlPort"));
     if(!portVal.isDouble())
-        throw std::runtime_error("listener port is not a number");
+        throw std::runtime_error("WifiLamp application controlPort is not a number");
 
     m_port = portVal.toInt();
 
@@ -55,8 +58,8 @@ void WifiLampApplication::handleRequest(HttpClientConnection *connection, const 
         HttpResponse response;
         response.protocol = request.protocol;
         response.statusCode = HttpResponse::StatusCode::BadRequest;
-        response.headers.insert(QStringLiteral("Server"), QStringLiteral("Hatschi Server 1.0"));
-        response.headers.insert(QStringLiteral("Content-Type"), QStringLiteral("text/html"));
+        response.headers.insert(HttpResponse::HEADER_SERVER, SERVER_NAME);
+        response.headers.insert(HttpResponse::HEADER_CONTENTTYPE, QStringLiteral("text/html"));
 
         connection->sendResponse(response, tr("Path does not start with /"));
         return;
@@ -76,10 +79,7 @@ void WifiLampApplication::handleRequest(HttpClientConnection *connection, const 
     {
         auto parts = request.path.split('/');
         if(parts.count() != 4)
-        {
-            handle404(connection, request);
-            return;
-        }
+            throw HttpNotFoundException(request);
 
         WifiLampClient *client;
 
@@ -88,10 +88,7 @@ void WifiLampApplication::handleRequest(HttpClientConnection *connection, const 
                                      [&parts](auto client){ return clientId(client) == parts.at(2); });
 
             if(iter == m_clients.constEnd())
-            {
-                handle404(connection, request);
-                return;
-            }
+                throw HttpNotFoundException(request);
 
             client = *iter;
         }
@@ -108,7 +105,7 @@ void WifiLampApplication::handleRequest(HttpClientConnection *connection, const 
         {
             auto iter = actions.find(parts.at(3));
             if(iter == actions.constEnd())
-                handle404(connection, request);
+                throw HttpNotFoundException(request);
             else
             {
                 (*iter)(client);
@@ -117,9 +114,7 @@ void WifiLampApplication::handleRequest(HttpClientConnection *connection, const 
         }
     }
     else
-    {
-        handle404(connection, request);
-    }
+        throw HttpNotFoundException(request);
 }
 
 const QSet<WifiLampClient *> &WifiLampApplication::clients() const
@@ -188,8 +183,8 @@ void WifiLampApplication::handleRoot(HttpClientConnection *connection, const Htt
     HttpResponse response;
     response.protocol = request.protocol;
     response.statusCode = HttpResponse::StatusCode::OK;
-    response.headers.insert(QStringLiteral("Server"), QStringLiteral("Hatschi Server 1.0"));
-    response.headers.insert(QStringLiteral("Content-Type"), QStringLiteral("text/html"));
+    response.headers.insert(HttpResponse::HEADER_SERVER, SERVER_NAME);
+    response.headers.insert(HttpResponse::HEADER_CONTENTTYPE, QStringLiteral("text/html"));
 
     connection->sendResponse(response, output);
 }
@@ -200,22 +195,11 @@ void WifiLampApplication::redirectRoot(HttpClientConnection *connection, const H
     response.protocol = request.protocol;
     response.statusCode = HttpResponse::StatusCode::Found;
 
-    response.headers.insert(QStringLiteral("Server"), QStringLiteral("Hatschi Server 1.0"));
-    response.headers.insert(QStringLiteral("Content-Type"), QStringLiteral("text/html"));
-    response.headers.insert(QStringLiteral("Location"), QStringLiteral("/"));
+    response.headers.insert(HttpResponse::HEADER_SERVER, SERVER_NAME);
+    response.headers.insert(HttpResponse::HEADER_CONTENTTYPE, QStringLiteral("text/html"));
+    response.headers.insert(HttpResponse::HEADER_LOCATION, QStringLiteral("/"));
 
     connection->sendResponse(response, "<a href=\"/\">" % tr("Follow this link") % "</a>");
-}
-
-void WifiLampApplication::handle404(HttpClientConnection *connection, const HttpRequest &request)
-{
-    HttpResponse response;
-    response.protocol = request.protocol;
-    response.statusCode = HttpResponse::StatusCode::NotFound;
-    response.headers.insert(QStringLiteral("Server"), QStringLiteral("Hatschi Server 1.0"));
-    response.headers.insert(QStringLiteral("Content-Type"), QStringLiteral("text/html"));
-
-    connection->sendResponse(response, tr("Not Found"));
 }
 
 QString WifiLampApplication::clientId(const WifiLampClient *client, bool forceIp)

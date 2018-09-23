@@ -14,6 +14,7 @@ class WifiLampClient;
 class WifiLampApplication : public WebApplication
 {
     Q_OBJECT
+    static const QString SERVER_NAME;
 
 public:
     WifiLampApplication(const QJsonObject &config, WebServer &webServer);
@@ -31,7 +32,6 @@ private Q_SLOTS:
 private:
     void handleRoot(HttpClientConnection *connection, const HttpRequest &request);
     void redirectRoot(HttpClientConnection *connection, const HttpRequest &request);
-    void handle404(HttpClientConnection *connection, const HttpRequest &request);
     static QString clientId(const WifiLampClient *client, bool forceIp = false);
 
     WebServer &m_webServer;
