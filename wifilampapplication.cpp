@@ -85,7 +85,7 @@ void WifiLampApplication::handleRequest(HttpClientConnection *connection, const 
 
         {
             auto iter = std::find_if(m_clients.constBegin(), m_clients.constEnd(),
-                                     [&parts](WifiLampClient* client){ return clientId(client) == parts.at(2); });
+                                     [&parts](WifiLampClient *client){ return clientId(client) == parts.at(2); });
 
             if(iter == m_clients.constEnd())
                 throw HttpNotFoundException(request);
@@ -94,12 +94,12 @@ void WifiLampApplication::handleRequest(HttpClientConnection *connection, const 
         }
 
         static const QHash<QString, std::function<void(WifiLampClient*)> > actions {
-            { QStringLiteral("toggle"),  [](WifiLampClient* client){ client->toggle();        } },
-            { QStringLiteral("on"),      [](WifiLampClient* client){ client->on();            } },
-            { QStringLiteral("off"),     [](WifiLampClient* client){ client->off();           } },
-            { QStringLiteral("refresh"), [](WifiLampClient* client){ client->requestStatus(); } },
-            { QStringLiteral("reboot"),  [](WifiLampClient* client){ client->reboot();        } },
-            { QStringLiteral("delete"),  [](WifiLampClient* client){ client->deleteLater();   } }
+            { QStringLiteral("toggle"),  [](WifiLampClient *client){ client->toggle();        } },
+            { QStringLiteral("on"),      [](WifiLampClient *client){ client->on();            } },
+            { QStringLiteral("off"),     [](WifiLampClient *client){ client->off();           } },
+            { QStringLiteral("refresh"), [](WifiLampClient *client){ client->requestStatus(); } },
+            { QStringLiteral("reboot"),  [](WifiLampClient *client){ client->reboot();        } },
+            { QStringLiteral("delete"),  [](WifiLampClient *client){ client->deleteLater();   } }
         };
 
         {

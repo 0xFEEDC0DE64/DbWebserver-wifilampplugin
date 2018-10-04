@@ -91,7 +91,7 @@ void WifiLampClient::readyRead()
         if(m_waitingForName)
         {
             const auto iter = std::find_if(m_application.clients().constBegin(), m_application.clients().constEnd(),
-                                           [&line](auto client) { return client->name() == line; });
+                                           [&line](WifiLampClient *client) { return client->name() == line; });
             if(iter != m_application.clients().constEnd())
                 delete *iter;
 
